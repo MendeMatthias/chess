@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+/* === Bonuz Chess Design System === */
+
+@theme {
+  --color-chess-dark: #0a0a0f;
+  --color-chess-darker: #060609;
+  --color-chess-card: #12121a;
+  --color-chess-border: #1e1e2e;
+  --color-chess-hover: #1a1a2a;
+
+  --color-gold: #f5a623;
+  --color-gold-light: #ffc857;
+  --color-gold-dark: #c4841d;
+
+  --color-accent: #8b5cf6;
+  --color-accent-light: #a78bfa;
+
+  --color-success: #22c55e;
+  --color-danger: #ef4444;
+  --color-warning: #eab308;
+
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* === Base Styles === */
+
+body {
+  background-color: var(--color-chess-dark);
+  color: #e2e8f0;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Custom Utilities === */
+
+@utility glass {
+  background: rgba(18, 18, 26, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-chess-border);
+}
+
+@utility gold-gradient {
+  background: linear-gradient(135deg, var(--color-gold), var(--color-gold-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@utility gold-glow {
+  box-shadow: 0 0 20px rgba(245, 166, 35, 0.15), 0 0 40px rgba(245, 166, 35, 0.05);
+}
+
+@utility card-hover {
+  transition: all 0.2s ease;
+  &:hover {
+    background: var(--color-chess-hover);
+    border-color: var(--color-gold);
+    transform: translateY(-1px);
+  }
+}
+
+/* === Scrollbar === */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-chess-darker);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-chess-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold-dark);
+}
+
+/* === Chess Board Custom Styles === */
+
+.chess-board-container {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow:
+    0 0 30px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(245, 166, 35, 0.05);
+}

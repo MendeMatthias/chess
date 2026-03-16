@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GameStatus {
+  PENDING
+  ACTIVE
+  FINISHED
+  CANCELLED
+}
+
+enum GameResult {
+  NONE
+  WHITE_WIN
+  BLACK_WIN
+  DRAW
+  CANCELLED
+}
+
+enum PlayerColor {
+  WHITE
+  BLACK
+}
+
+model User {
+  id            String   @id @default(uuid())
+  walletAddress String   @unique @map("wallet_address")
+  username      String?  @unique
+  rating        Int      @default(1200)
+  avatarUrl     String?  @map("avatar_url")
+  gamesPlayed   Int      @default(0) @map("games_played")
+  gamesWon      Int      @default(0) @map("games_won")
+  totalStaked   Decimal  @default(0) @map("total_staked") @db.Decimal(30, 18)
+  totalWon      Decimal  @default(0) @map("total_won") @db.Decimal(30, 18)
+  lastSeenAt    DateTime @default(now()) @map("last_seen_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  gamesAsWhite  Game[]   @relation("WhitePlayer")
+  gamesAsBlack  Game[]   @relation("BlackPlayer")
+  gamesCreated  Game[]   @relation("GameCreator")
+  moves         Move[]
+  messages      ChatMessage[]
+
+  @@index([rating])
+  @@map("users")
+}
+
+model Game {
+  id                    String     @id @default(uuid())
+  onchainGameId         Int?       @unique @map("onchain_game_id")
+  status                GameStatus @default(PENDING)
+  result                GameResult @default(NONE)
+  stakeAmount           Decimal    @default(0) @map("stake_amount") @db.Decimal(30, 18)
+  perMoveTimeLimit      Int        @default(60) @map("per_move_time_limit") // seconds
+  currentFen            String     @default("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") @map("current_fen")
+  currentTurn           PlayerColor @default(WHITE) @map("current_turn")
+  moveCount             Int        @default(0) @map("move_count")
+  lastMoveAt            DateTime?  @map("last_move_at")
+  isPrivate             Boolean    @default(false) @map("is_private")
+  inviteCode            String?    @unique @map("invite_code")
+
+  creatorId             String     @map("creator_id")
+  creator               User       @relation("GameCreator", fields: [creatorId], references: [id])
+
+  whitePlayerId         String?    @map("white_player_id")
+  whitePlayer           User?      @relation("WhitePlayer", fields: [whitePlayerId], references: [id])
+
+  blackPlayerId         String?    @map("black_player_id")
+  blackPlayer           User?      @relation("BlackPlayer", fields: [blackPlayerId], references: [id])
+
+  txHashCreate          String?    @map("tx_hash_create")
+  txHashJoin            String?    @map("tx_hash_join")
+  txHashFinish          String?    @map("tx_hash_finish")
+
+  startedAt             DateTime?  @map("started_at")
+  finishedAt            DateTime?  @map("finished_at")
+  createdAt             DateTime   @default(now()) @map("created_at")
+  updatedAt             DateTime   @updatedAt @map("updated_at")
+
+  moves                 Move[]
+  messages              ChatMessage[]
+  events                OnchainEvent[]
+
+  @@index([status])
+  @@index([creatorId])
+  @@index([whitePlayerId])
+  @@index([blackPlayerId])
+  @@index([createdAt])
+  @@map("games")
+}
+
+model Move {
+  id        String      @id @default(uuid())
+  gameId    String      @map("game_id")
+  game      Game        @relation(fields: [gameId], references: [id])
+  playerId  String      @map("player_id")
+  player    User        @relation(fields: [playerId], references: [id])
+  from      String
+  to        String
+  promotion String?
+  fen       String      // Board state after move
+  san       String      // Standard algebraic notation
+  moveNumber Int        @map("move_number")
+  timeSpent  Int?       @map("time_spent") // seconds spent on this move
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  @@index([gameId])
+  @@index([playerId])
+  @@map("moves")
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  gameId    String   @map("game_id")
+  game      Game     @relation(fields: [gameId], references: [id])
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([gameId])
+  @@map("chat_messages")
+}
+
+model OnchainEvent {
+  id        String   @id @default(uuid())
+  gameId    String   @map("game_id")
+  game      Game     @relation(fields: [gameId], references: [id])
+  eventName String   @map("event_name")
+  txHash    String   @map("tx_hash")
+  blockNumber Int    @map("block_number")
+  rawData   Json?    @map("raw_data")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([gameId])
+  @@index([txHash])
+  @@map("onchain_events")
+}
